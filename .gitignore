@@ -1,0 +1,25 @@
+Frontend (Next.js)
+.next/
+node_modules/
+out/
+build/
+
+Backend (Go)
+/backend/bin/
+/backend/tmp/
+
+AI Microservice (Python)
+pycache/
+*.pyc
+.venv/
+venv/
+
+Smart Contracts (Foundry)
+/contracts/out/
+/contracts/cache/
+/contracts/broadcast/
+
+Environment
+.env
+.env.local
+.DS_Store
