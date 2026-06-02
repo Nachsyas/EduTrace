@@ -1,0 +1,14 @@
+{
+  "name": "edutrace-monorepo",
+  "version": "1.0.0",
+  "description": "EduTrace: AI-Powered Soulbound Student Report Cards (Enterprise DApp Monorepo)",
+  "private": true,
+  "scripts": {
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:go": "cd services/go-indexer && go run main.go",
+    "dev:ai": "cd services/python-ai && .venv/bin/python main.py",
+    "dev": "npx concurrently --kill-others -n \"Frontend,Go-Indexer,Python-AI\" -c \"cyan,green,yellow\" \"npm run dev:frontend\" \"npm run dev:go\" \"npm run dev:ai\"",
+    "build:frontend": "npm --prefix frontend run build",
+    "test:contracts": "cd contracts && forge test"
+  }
+}
