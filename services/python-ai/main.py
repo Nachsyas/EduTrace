@@ -5,6 +5,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 import uvicorn
+import os
 from model import get_dropout_risk, get_career_recommendation, get_comprehensive_analysis
 
 app = FastAPI(
@@ -72,5 +73,6 @@ def predict(payload: PredictionInput):
         raise HTTPException(status_code=500, detail=f"Prediction calculation failed: {str(e)}")
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
 
