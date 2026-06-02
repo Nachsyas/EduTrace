@@ -558,7 +558,8 @@ function DashboardContent() {
     setStudentData(null)
 
     try {
-      const res = await fetch(`http://localhost:8080/api/student/${addr}`)
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+      const res = await fetch(`${backendUrl}/api/student/${addr}`)
       if (!res.ok) {
         throw new Error('Data nilai mahasiswa tidak ditemukan di indexer. Silakan simulasikan Minting terlebih dahulu.')
       }

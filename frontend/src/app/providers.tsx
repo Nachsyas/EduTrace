@@ -2,7 +2,7 @@
 
 import React, { useState, ReactNode } from 'react'
 import { WagmiProvider } from 'wagmi'
-import { mainnet, sepolia, foundry } from 'wagmi/chains'
+import { mainnet, sepolia, foundry, polygonAmoy } from 'wagmi/chains'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react'
 
@@ -16,7 +16,7 @@ const metadata = {
   icons: ['https://avatars.githubusercontent.com/u/17922993'],
 }
 
-const chains = [foundry, sepolia, mainnet] as const
+const chains = [polygonAmoy, foundry, sepolia, mainnet] as const
 
 // 1. Create standard, highly robust, and perfectly SSR-safe Wagmi Config using Web3Modal's official wrapper
 const config = defaultWagmiConfig({
