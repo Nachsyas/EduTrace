@@ -1,5 +1,6 @@
 'use client'
 
+import './init'
 import React, { useState, ReactNode } from 'react'
 import { WagmiProvider } from 'wagmi'
 import { mainnet, sepolia, foundry, polygonAmoy } from 'wagmi/chains'
