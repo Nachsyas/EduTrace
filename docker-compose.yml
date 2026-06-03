@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  python-ai:
+    build:
+      context: ./services/python-ai
+      dockerfile: Dockerfile
+    container_name: edutrace-python-ai
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+    restart: always
+
+  go-indexer:
+    build:
+      context: ./services/go-indexer
+      dockerfile: Dockerfile
+    container_name: edutrace-go-indexer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - python-ai
+    environment:
+      - PORT=8080
+      # PostgreSQL database connection string (e.g. Supabase connection).
+      # If left empty, the Go Indexer automatically falls back to a mock in-memory repository for stability.
+      - DATABASE_URL=${DATABASE_URL}
+      # Polygon Amoy network RPC URL. Defaults to public RPC if not set in .env.
+      - RPC_URL=${RPC_URL:-https://rpc-amoy.polygon.technology}
+      # Address of the deployed EduTraceSBT contract on Polygon Amoy.
+      - CONTRACT_ADDRESS=0x3ae9d4dd70135783fdba2a565de148c5b02d5516
+      # URL to python-ai FastAPI container within the internal docker network.
+      - AI_SERVICE_URL=http://python-ai:8000
+    restart: always
