@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  python-ai:
+    # Pulls the prebuilt optimized AI container from GHCR
+    image: ghcr.io/nachsyas/edutrace-python-ai:latest
+    container_name: edutrace-python-ai-prod
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+    restart: always
+
+  go-indexer:
+    # Pulls the prebuilt compiled Go Event Indexer container from GHCR
+    image: ghcr.io/nachsyas/edutrace-go-indexer:latest
+    container_name: edutrace-go-indexer-prod
+    ports:
+      - "8080:8080"
+    depends_on:
+      - python-ai
+    environment:
+      - PORT=8080
+      # Safe environment variable injection via VPS host variables or VPS .env file
+      - DATABASE_URL=${DATABASE_URL}
+      - RPC_URL=${RPC_URL:-https://rpc-amoy.polygon.technology}
+      - CONTRACT_ADDRESS=0x3ae9d4dd70135783fdba2a565de148c5b02d5516
+      - AI_SERVICE_URL=http://python-ai:8000
+    restart: always

@@ -1,0 +1,96 @@
+name: CI/CD Deployment Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-push:
+    name: Build & Push to GHCR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Lowercase Repository Owner Name
+        id: prep
+        run: |
+          echo "OWNER_LC=${OWNER,,}" >> $GITHUB_ENV
+        env:
+          OWNER: '${{ github.repository_owner }}'
+
+      # Build & Push Go Event Indexer
+      - name: Build and Push Go Indexer Image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./services/go-indexer
+          file: ./services/go-indexer/Dockerfile
+          push: true
+          tags: ghcr.io/${{ env.OWNER_LC }}/edutrace-go-indexer:latest
+
+      # Build & Push Python AI Service
+      - name: Build and Push Python AI Image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./services/python-ai
+          file: ./services/python-ai/Dockerfile
+          push: true
+          tags: ghcr.io/${{ env.OWNER_LC }}/edutrace-python-ai:latest
+
+  deploy-to-vps:
+    name: Deploy to Cloud VPS
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Lowercase Repository Owner Name
+        id: prep
+        run: |
+          echo "OWNER_LC=${OWNER,,}" >> $GITHUB_ENV
+        env:
+          OWNER: '${{ github.repository_owner }}'
+
+      # Copy docker-compose.prod.yml to the VPS via SCP
+      - name: Copy docker-compose.prod.yml to VPS
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "docker-compose.prod.yml"
+          target: "~/edutrace/"
+
+      # Connect to VPS via SSH to Pull Images and Restart Stack
+      - name: Execute Remote SSH Commands
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            mkdir -p ~/edutrace
+            cd ~/edutrace
+            
+            # Setup environment variables configuration
+            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
+            echo "RPC_URL=${{ secrets.RPC_URL }}" >> .env
+            
+            # Authenticate to GHCR
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # Pull new container versions and deploy
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
